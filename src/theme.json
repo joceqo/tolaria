@@ -2,7 +2,7 @@
   "editor": {
     "fontFamily": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     "fontSize": 16,
-    "lineHeight": 1.7,
+    "lineHeight": 1.5,
     "maxWidth": 720,
     "paddingHorizontal": 40,
     "paddingVertical": 20,
@@ -48,8 +48,8 @@
   },
   "lists": {
     "bulletSymbol": "•",
-    "bulletSize": 16,
-    "bulletColor": "var(--text-tertiary)",
+    "bulletSize": 28,
+    "bulletColor": "#177bfd",
     "indentSize": 24,
     "itemSpacing": 4,
     "paddingLeft": 8,
@@ -57,7 +57,7 @@
     "bulletGap": 6
   },
   "checkboxes": {
-    "size": 24,
+    "size": 18,
     "borderRadius": 3,
     "checkedColor": "var(--accent-blue)",
     "uncheckedBorderColor": "var(--text-muted)",

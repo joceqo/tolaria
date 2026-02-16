@@ -19,6 +19,15 @@
   line-height: var(--editor-line-height) !important;
 }
 
+/* Stack handle buttons horizontally instead of vertically to reduce height,
+   so they fit within a single text line for headings and paragraphs. */
+.editor__blocknote-container .bn-side-menu {
+  --group-wrap: nowrap !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+}
+
 .editor__blocknote-container .bn-editor ::selection {
   background: var(--colors-selection);
 }
