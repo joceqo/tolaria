@@ -279,7 +279,11 @@ pub fn git_commit(vault_path: &str, message: &str) -> Result<String, String> {
         let stderr = String::from_utf8_lossy(&commit.stderr);
         let stdout = String::from_utf8_lossy(&commit.stdout);
         // git writes "nothing to commit" to stdout, not stderr
-        let detail = if stderr.trim().is_empty() { stdout } else { stderr };
+        let detail = if stderr.trim().is_empty() {
+            stdout
+        } else {
+            stderr
+        };
         return Err(format!("git commit failed: {}", detail.trim()));
     }
 
