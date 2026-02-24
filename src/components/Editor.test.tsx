@@ -22,14 +22,19 @@ vi.mock('@blocknote/core', () => ({
   filterSuggestionItems: vi.fn(() => []),
 }))
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock
+const mockFilterSuggestionItems = vi.fn((...args: any[]) => args[0] ?? [])
 vi.mock('@blocknote/core/extensions', () => ({
-  filterSuggestionItems: vi.fn(() => []),
+  filterSuggestionItems: (...args: unknown[]) => mockFilterSuggestionItems(...args),
 }))
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock
+let capturedGetItems: ((query: string) => Promise<any[]>) | null = null
 vi.mock('@blocknote/react', () => ({
   createReactInlineContentSpec: () => ({ render: () => null }),
   useCreateBlockNote: () => mockEditor,
-  SuggestionMenuController: () => null,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock
+  SuggestionMenuController: (props: any) => { capturedGetItems = props.getItems; return null },
 }))
 
 vi.mock('@blocknote/mantine', () => ({
@@ -266,5 +271,80 @@ describe('Editor', () => {
     mockEditor.tryParseMarkdownToBlocks.mockResolvedValue([])
     mockEditor.replaceBlocks.mockClear()
     mockEditor.insertBlocks.mockClear()
+  })
+})
+
+describe('wikilink autocomplete', () => {
+  const entries: VaultEntry[] = [
+    { ...mockEntry, title: 'Alpha Project', filename: 'alpha.md', aliases: ['al'] },
+    { ...mockEntry, title: 'Beta Review', filename: 'beta.md', path: '/vault/beta.md', aliases: [] },
+    { ...mockEntry, title: 'Gamma Notes', filename: 'gamma.md', path: '/vault/gamma.md', aliases: ['gam'] },
+  ]
+
+  function renderWithEntries() {
+    capturedGetItems = null
+    mockFilterSuggestionItems.mockClear()
+    render(
+      <Editor
+        {...defaultProps}
+        tabs={[mockTab]}
+        activeTabPath={mockEntry.path}
+        entries={entries}
+      />
+    )
+  }
+
+  it('returns empty array for query shorter than 2 characters', async () => {
+    renderWithEntries()
+    expect(capturedGetItems).toBeTruthy()
+    expect(await capturedGetItems!('')).toEqual([])
+    expect(await capturedGetItems!('a')).toEqual([])
+    // filterSuggestionItems should NOT be called for short queries
+    expect(mockFilterSuggestionItems).not.toHaveBeenCalled()
+  })
+
+  it('returns items for query of 2+ characters', async () => {
+    renderWithEntries()
+    const items = await capturedGetItems!('Al')
+    expect(items.length).toBeGreaterThan(0)
+    expect(mockFilterSuggestionItems).toHaveBeenCalled()
+  })
+
+  it('limits results to MAX_RESULTS (20)', async () => {
+    // Create many entries that will all match
+    const manyEntries = Array.from({ length: 50 }, (_, i) => ({
+      ...mockEntry,
+      title: `Match Item ${i}`,
+      filename: `match-${i}.md`,
+      path: `/vault/match-${i}.md`,
+      aliases: [],
+    }))
+
+    capturedGetItems = null
+    mockFilterSuggestionItems.mockImplementation((items: unknown[]) => items)
+    render(
+      <Editor
+        {...defaultProps}
+        tabs={[mockTab]}
+        activeTabPath={mockEntry.path}
+        entries={manyEntries}
+      />
+    )
+
+    const items = await capturedGetItems!('Match')
+    expect(items.length).toBeLessThanOrEqual(20)
+    mockFilterSuggestionItems.mockImplementation((items: unknown[]) => items)
+  })
+
+  it('each item has onItemClick that inserts wikilink', async () => {
+    renderWithEntries()
+    mockEditor.insertInlineContent.mockClear()
+    const items = await capturedGetItems!('Alpha')
+    expect(items.length).toBeGreaterThan(0)
+    items[0].onItemClick()
+    expect(mockEditor.insertInlineContent).toHaveBeenCalledWith([
+      { type: 'wikilink', props: { target: 'Alpha Project' } },
+      ' ',
+    ])
   })
 })

@@ -14,6 +14,7 @@ import { TabBar } from './TabBar'
 import { BreadcrumbBar } from './BreadcrumbBar'
 import { useEditorTheme } from '../hooks/useTheme'
 import { splitFrontmatter, preProcessWikilinks, injectWikilinks, restoreWikilinksInBlocks, countWords } from '../utils/wikilinks'
+import { preFilterWikilinks, MAX_RESULTS, MIN_QUERY_LENGTH } from '../utils/wikilinkSuggestions'
 import { resolveWikilinkColor as resolveColor } from '../utils/wikilinkColors'
 import './Editor.css'
 import './EditorTheme.css'
@@ -141,7 +142,10 @@ function SingleEditorView({ editor, entries, onNavigateWikilink, onChange }: { e
   )
 
   const getWikilinkItems = useCallback(async (query: string) => {
-    const items = baseItems.map(item => ({
+    if (query.length < MIN_QUERY_LENGTH) return []
+
+    const candidates = preFilterWikilinks(baseItems, query)
+    const items = candidates.map(item => ({
       ...item,
       onItemClick: () => {
         editor.insertInlineContent([
@@ -153,7 +157,7 @@ function SingleEditorView({ editor, entries, onNavigateWikilink, onChange }: { e
         ])
       },
     }))
-    return filterSuggestionItems(items, query)
+    return filterSuggestionItems(items, query).slice(0, MAX_RESULTS)
   }, [baseItems, editor])
 
   return (
