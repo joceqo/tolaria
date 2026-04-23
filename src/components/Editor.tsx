@@ -52,7 +52,7 @@ interface EditorProps {
   onUpdateFrontmatter?: (path: string, key: string, value: FrontmatterValue) => Promise<void>
   onDeleteProperty?: (path: string, key: string) => Promise<void>
   onAddProperty?: (path: string, key: string, value: FrontmatterValue) => Promise<void>
-  onCreateMissingType?: (path: string, missingType: string, nextTypeName: string) => Promise<void>
+  onCreateMissingType?: (path: string, missingType: string, nextTypeName: string) => Promise<boolean | void>
   onCreateAndOpenNote?: (title: string) => Promise<boolean>
   onInitializeProperties?: (path: string) => void
   showAIChat?: boolean
@@ -184,6 +184,7 @@ function useEditorSetup({
     activeTabPath,
     activeTab?.content ?? null,
     onContentChange,
+    vaultPath,
   )
   const tabsForEditorSwap = applyPendingRawExitContent(tabs, pendingRawExitContent)
   const rawModeContent = resolveRawModeContent({ activeTab, rawModeContentOverride })
@@ -197,7 +198,7 @@ function useEditorSetup({
   }, [activeTabPath, setPendingRawExitContent, tabs])
 
   const { handleEditorChange, editorMountedRef } = useEditorTabSwap({
-    tabs: tabsForEditorSwap, activeTabPath, editor, onContentChange, rawMode,
+    tabs: tabsForEditorSwap, activeTabPath, editor, onContentChange, rawMode, vaultPath,
   })
   useEditorFocus(editor, editorMountedRef)
 
@@ -360,7 +361,7 @@ function EditorLayout({
   onUpdateFrontmatter?: (path: string, key: string, value: FrontmatterValue) => Promise<void>
   onDeleteProperty?: (path: string, key: string) => Promise<void>
   onAddProperty?: (path: string, key: string, value: FrontmatterValue) => Promise<void>
-  onCreateMissingType?: (path: string, missingType: string, nextTypeName: string) => Promise<void>
+  onCreateMissingType?: (path: string, missingType: string, nextTypeName: string) => Promise<boolean | void>
   onCreateAndOpenNote?: (title: string) => Promise<boolean>
   onInitializeProperties?: (path: string) => void
   onFileCreated?: (relativePath: string) => void
