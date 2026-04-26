@@ -715,10 +715,15 @@ mod tests {
                 "type": "result", "result": "Hello", "session_id": "s1"
             }),
         ]);
-        let text_deltas: Vec<_> = events.iter()
+        let text_deltas: Vec<_> = events
+            .iter()
             .filter(|e| matches!(e, ClaudeStreamEvent::TextDelta { .. }))
             .collect();
-        assert_eq!(text_deltas.len(), 1, "should not duplicate text when already streamed");
+        assert_eq!(
+            text_deltas.len(),
+            1,
+            "should not duplicate text when already streamed"
+        );
     }
 
     #[test]
@@ -726,7 +731,9 @@ mod tests {
         let (_, events) = run_dispatch(serde_json::json!({
             "type": "result", "result": "", "session_id": "s1"
         }));
-        assert!(!events.iter().any(|e| matches!(e, ClaudeStreamEvent::TextDelta { .. })));
+        assert!(!events
+            .iter()
+            .any(|e| matches!(e, ClaudeStreamEvent::TextDelta { .. })));
     }
 
     #[test]
